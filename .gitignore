@@ -1,0 +1,13 @@
+node_modules/
+.env
+*.txt
+
+uploads/*
+!uploads/.gitkeep
+!uploads/subject1/.gitkeep
+!uploads/subject2/.gitkeep
+!uploads/subject3/.gitkeep
+!uploads/subject4/.gitkeep
+!uploads/subject5/.gitkeep
+!uploads/subject6/.gitkeep
+!uploads/subject7/.gitkeep

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Notes Portal - Contact</title>
+    <link rel="stylesheet" href="home.css">
+</head>
+
+<body>
+    <nav>
+        <div class="navbar">
+            <div class="navbar-logo">🎓 CAMPUS NOTES</div>
+            <div class="navbar-contents">
+                <div class="home-page"><a href="home.html">Home</a></div>
+                <div class="notes-page"><a href="notes.html">Notes</a></div>
+                <div class="contact-page"><a href="contact.html">Contact</a></div>
+                <div class="about-page"><a href="about.html">About</a></div>
+            </div>
+        </div>
+    </nav>
+    <section class="contact-section">
+        <header class="contact-header">GET IN TOUCH</header>
+        <p class="contact-content">If you have any questions, need help accessing notes, or want to request study
+            materials,feel free to contact us.</p>
+    </section>
+    <section class="contact-entry">
+      <span class="problem">You can share your Problem</span>
+    <form class="contact-form">
+
+        <input type="text" placeholder="Your Name" required>
+
+        <input type="email" placeholder="Your Email" required>
+
+        <input type="text" placeholder="Subject" required>
+
+        <textarea placeholder="Your Message" required></textarea>
+
+        <button type="submit">Send Message</button>
+        </section>
+
+    </form>
+    <section class="contact-info">
+          <span class="contact-person">Contact us:</span>
+        <div class="contact-item email"><a href="mailto:nandeeshmn570@gmail.com" target="_blank">📧Email:
+                nandeeshmn570@gmail.com</a></div>
+        <div class="contact-item"><a href="tel:9036481898" target="_blank">📞Phone:+91 9036481898</a></div>
+        <div class="contact-item location"><a
+                href="https://www.google.com/maps/place/38,+JHBCS+Layout+2nd+Main+Rd,+Bendre+Nagar,+Bengaluru,+Karnataka+560070/@12.9122883,77.5657866,19z/am=t/data=!4m19!1m12!4m11!1m3!2m2!1d77.5664193!2d12.912256!1m6!1m2!1s0x3bae157c61b4e251:0xdc509db0562eb979!2s38,+JHBCS+Layout+2nd+Main+Rd,+Bendre+Nagar,+Bengaluru,+Karnataka+560070!2m2!1d77.5664273!2d12.9122731!3m5!1s0x3bae157c61b4e251:0xdc509db0562eb979!8m2!3d12.9122731!4d77.5664273!16s%2Fg%2F11lmq29ttz?entry=ttu&g_ep=EgoyMDI2MDMxMC4wIKXMDSoASAFQAw%3D%3D"
+                target="_blank">📍Location:Bengaluru, Karnataka</a></div>
+    </section>
+   
+    <footer>@ 2026 Student Notes Portal | Engineering study Resources</footer>
+
+</body>
+<script>
+
+document.querySelector(".contact-form")
+.addEventListener("submit", async (e) => {
+
+    e.preventDefault();
+
+    const data = {
+        name: document.querySelector('input[placeholder="Your Name"]').value,
+
+        email: document.querySelector('input[placeholder="Your Email"]').value,
+
+        subject: document.querySelector('input[placeholder="Subject"]').value,
+
+        message: document.querySelector("textarea").value
+    };
+
+    const res = await fetch("/contact", {
+
+        method: "POST",
+
+        headers: {
+            "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+
+    alert(result.message);
+
+});
+
+</script>
+</html>
