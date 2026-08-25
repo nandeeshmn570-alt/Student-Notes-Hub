@@ -22,6 +22,7 @@
                 <div class="notes-page"><a href="notes.html">Notes</a></div>
                 <div class="contact-page"><a href="contact.html">Contact</a></div>
                 <div class="about-page"><a href="about.html">About</a></div>
+                <button class="logout-btn" type="button" hidden>Logout</button>
             </div>
         </div>
     </nav>
@@ -41,6 +42,23 @@
     </section>
 
     <footer>@ 2026 Student Notes Portal | Engineering study Resources</footer>
+
+    <script>
+        const logoutButton = document.querySelector(".logout-btn");
+
+        fetch("/check-admin", { credentials: "include" })
+            .then(res => res.json())
+            .then(data => {
+                if (data.isAdmin !== true) return;
+
+                logoutButton.hidden = false;
+                logoutButton.addEventListener("click", async () => {
+                    await fetch("/logout", { method: "POST", credentials: "include" });
+                    window.location.href = "home.html";
+                });
+            })
+            .catch(err => console.error("Error checking admin session:", err));
+    </script>
 
 </body>
 

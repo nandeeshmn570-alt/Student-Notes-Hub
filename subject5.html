@@ -19,61 +19,70 @@
                 <div class="notes-page"><a href="notes.html">Notes</a></div>
                 <div class="contact-page"><a href="contact.html">Contact</a></div>
                 <div class="about-page"><a href="about.html">About</a></div>
+                <button class="logout-btn" type="button" hidden>Logout</button>
             </div>
         </div>
     </nav>
-    <form id="uploadForm" >
-        <main class="notes-subject1">
+    <main class="notes-subject1">
+        <form id="uploadForm" class="notes-card-form">
             <div class="notes-card">
                 <div class="file-container">
                     <input type="file" name="file" multiple>
-                    <input type="hidden" name="subject" value="subject1">
+                    <input type="hidden" name="subject" value="subject5">
                 </div>
                 <button class="add-btn" type="button" onclick="magic()">+Add File</button>
                 <button type="submit">upload</button>
             </div>
-            </form>
-            <h2 class="note-title">Available Notes</h2>
-            <div id="file-list" class="notes-gallery"></div>
-        </main>
+        </form>
+
+        <h2 class="note-title">Available Notes</h2>
+        <div id="file-list" class="notes-gallery"></div>
+    </main>
     
     <footer>@ 2026 Student Notes Portal | Engineering study Resources</footer>
     <script>
+        const subject = "subject5";
 
         function magic() {
-            const fileDiv = document.getElementsByClassName("file-container")[0]
-            const input = document.createElement("input")
-            input.type = "file"
-            input.name = "file"
+            const fileDiv = document.getElementsByClassName("file-container")[0];
+            const input = document.createElement("input");
+            input.type = "file";
+            input.name = "file";
 
-            const wrapper = document.createElement("div")
-            wrapper.className = "file-row"
+            const wrapper = document.createElement("div");
+            wrapper.className = "file-row";
 
-
-            const removeBtn = document.createElement("button")
-            removeBtn.innerText = "X"
-            removeBtn.className = "remove-btn"
+            const removeBtn = document.createElement("button");
+            removeBtn.innerText = "X";
+            removeBtn.className = "remove-btn";
 
             removeBtn.onclick = function () {
-                wrapper.remove()
-            }
-            wrapper.appendChild(input)
-            wrapper.appendChild(removeBtn)
-            fileDiv.appendChild(wrapper)
+                wrapper.remove();
+            };
 
+            wrapper.appendChild(input);
+            wrapper.appendChild(removeBtn);
+            fileDiv.appendChild(wrapper);
         }
+
+        const getFileName = (file) => typeof file === "string" ? file : (file.fileName || file.name);
 
         let isAdmin = false;
 
-       
         fetch("/check-admin", {
             credentials: "include"
         }).then(res => res.json())
             .then(data => {
-                isAdmin = data.isAdmin;
-
-               
-                return fetch("/files?subject=subject5");
+                isAdmin = data.isAdmin === true;
+                const logoutButton = document.querySelector(".logout-btn");
+                if (isAdmin) {
+                    logoutButton.hidden = false;
+                    logoutButton.addEventListener("click", async () => {
+                        await fetch("/logout", { method: "POST", credentials: "include" });
+                        window.location.href = "home.html";
+                    });
+                }
+                return fetch(`/files?subject=${subject}`);
             })
             .then(res => res.json())
             .then(files => {
@@ -81,31 +90,30 @@
                 container.innerHTML = "";
 
                 files.forEach(file => {
+                    const fileName = getFileName(file);
                     const div = document.createElement("div");
                     div.style.marginBottom = "10px";
 
-                   
                     const link = document.createElement("a");
-                    link.href = "/uploads/subject1/" + file.fileName;
-                    const cleanName=file.fileName.split("-").slice(1).join("-");
+                    link.href = `/uploads/${subject}/${fileName}`;
+                    const cleanName = fileName.split("-").slice(1).join("-");
                     link.innerText = "📄 " + cleanName;
                     link.target = "_blank";
-                    link.classList.add("note-box")
-                    div.className="file-item"
+                    link.classList.add("note-box");
+                    div.className = "file-item";
 
                     div.appendChild(link);
 
-                   
                     if (isAdmin) {
                         const delBtn = document.createElement("button");
                         delBtn.innerText = "Delete";
-                        delBtn.className="delete-btn"
+                        delBtn.className = "delete-btn";
                         delBtn.style.marginLeft = "10px";
 
                         delBtn.onclick = async () => {
                             if (!confirm("Delete this file?")) return;
 
-                            const res = await fetch(`/delete?subject=subject5&filename=${file.fileName}`, {
+                            const res = await fetch(`/delete?subject=${subject}&filename=${encodeURIComponent(fileName)}`, {
                                 method: "DELETE",
                                 credentials: "include"
                             });
@@ -129,20 +137,28 @@
             .catch(err => {
                 console.error("Error loading files:", err);
             });
+
         document.getElementById("uploadForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
             const formData = new FormData();
             const inputs = document.querySelectorAll('input[type="file"]');
+            let hasFiles = false;
 
             inputs.forEach(input => {
-                for(let i=0;i<input.files.length;i++) {
+                for (let i = 0; i < input.files.length; i++) {
+                    hasFiles = true;
                     formData.append("file", input.files[i]);
                 }
             });
 
+            if (!hasFiles) {
+                alert("Please select a file to upload.");
+                return;
+            }
+
             try {
-                const res = await fetch("http://localhost:3000/upload?subject=subject5", {
+                const res = await fetch(`/upload?subject=${subject}`, {
                     method: "POST",
                     body: formData,
                     credentials: "include"
@@ -152,22 +168,17 @@
 
                 if (res.ok) {
                     alert("Upload successful ✅");
-                    location.reload(); 
-                }else if (res.status === 403) {
-                                alert("❌ Only admin can add notes.");
-                            }
-                 else {
-                    alert(data.message);
+                    location.reload();
+                } else if (res.status === 403) {
+                    alert("❌ Only admin can add notes.");
+                } else {
+                    alert(data.message || "Upload failed ❌");
                 }
-
             } catch (err) {
                 console.error(err);
                 alert("Upload failed ❌");
             }
         });
-
-
-
     </script>
 
 </body>

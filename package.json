@@ -10,9 +10,10 @@
   "name": "students-notes-hub-claude2",
   "version": "1.0.0",
   "description": "",
-  "main": "admin.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js",
+    "test": "node --check server.js"
   },
   "keywords": [],
   "author": "",
