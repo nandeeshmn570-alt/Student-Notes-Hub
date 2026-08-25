@@ -1,15 +1,19 @@
 require("dotenv").config();
-const express = require('express')
-const session = require("express-session");
-const app = express()
-const multer = require("multer")
+
+const express = require("express");
+const fs = require("fs");
 const mongoose = require("mongoose");
+const multer = require("multer");
+const path = require("path");
+const session = require("express-session");
 
+const app = express();
+const PORT = Number(process.env.PORT) || 3000;
+const PUBLIC_DIR = path.join(__dirname, "public");
+const UPLOADS_DIR = path.join(__dirname, "uploads");
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/campusNotes";
 
-mongoose.connect(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/campusNotes")
-  .then(() => console.log("MongoDB Connected"))
-  .catch(err => console.log(err));
-
+// Database models
 const contactSchema = new mongoose.Schema({
   name: String,
   email: String,
@@ -17,68 +21,78 @@ const contactSchema = new mongoose.Schema({
   message: String
 });
 
-const Contact = mongoose.model("Contact", contactSchema);
 const notesSchema = new mongoose.Schema({
-
   fileName: String,
-
   subject: String,
-
   uploadedBy: String,
-
   uploadDate: {
     type: Date,
     default: Date.now
   }
-
 });
-const Note = mongoose.model("Note", notesSchema);
-const port = 3000
-app.use(express.json());
-app.use("/uploads", express.static("uploads"));
-app.use(express.static("."));
 
+const Contact = mongoose.model("Contact", contactSchema);
+const Note = mongoose.model("Note", notesSchema);
+
+// Middleware
+app.use(express.json());
 app.use(session({
   secret: process.env.SESSION_SECRET || "campus-notes-default-secret",
   resave: false,
   saveUninitialized: true
 }));
+app.use("/uploads", express.static(UPLOADS_DIR));
+app.use(express.static(PUBLIC_DIR));
 
+function requireAdmin(req, res, next) {
+  if (req.session.isAdmin !== true) {
+    return res.status(403).json({ message: "Unauthorized" });
+  }
+
+  next();
+}
+
+function getSubjectDirectory(subject) {
+  return path.join(UPLOADS_DIR, subject);
+}
+
+// Upload configuration
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const subject = req.query.subject
+  destination: (req, file, callback) => {
+    const { subject } = req.query;
 
     if (!subject) {
-      return cb(new Error("subject not provided"), null)
-    }
-    const dir = "uploads/" + subject;
-    const fs = require("fs")
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+      return callback(new Error("subject not provided"), null);
     }
 
-    cb(null, dir);
+    const subjectDirectory = getSubjectDirectory(subject);
+    fs.mkdirSync(subjectDirectory, { recursive: true });
+    callback(null, subjectDirectory);
   },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + "-" + file.originalname);
+  filename: (req, file, callback) => {
+    callback(null, `${Date.now()}-${file.originalname}`);
   }
 });
 
 const upload = multer({ storage });
 
-app.get('/', (req, res) => {
-  res.send('Hello World! with Nandeesh M N')
-})
+// Page routes
+app.get("/", (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "home.html"));
+});
 
+// Authentication routes
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
+  const validCredentials = username === process.env.ADMIN_USERNAME
+    && password === process.env.ADMIN_PASSWORD;
 
-  if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
-    req.session.isAdmin = true;
-    return res.json({ success: true });
+  if (!validCredentials) {
+    return res.json({ success: false });
   }
 
-  return res.json({ success: false });
+  req.session.isAdmin = true;
+  res.json({ success: true });
 });
 
 app.get("/check-admin", (req, res) => {
@@ -86,8 +100,8 @@ app.get("/check-admin", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
+  req.session.destroy((error) => {
+    if (error) {
       return res.status(500).json({ success: false, message: "Logout failed" });
     }
 
@@ -96,71 +110,57 @@ app.post("/logout", (req, res) => {
   });
 });
 
-app.post("/upload",
-  (req, res, next) => {
-    if (!req.session.isAdmin) {
-      return res.status(403).json({ message: "Unauthorized" });
+// Note routes
+app.post("/upload", requireAdmin, upload.array("file"), async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: "No file selected" });
     }
-    next();
-  },
-  upload.array("file"),
-  async (req, res) => {
-    try {
-      if (!req.files || req.files.length === 0) {
-        return res.status(400).json({ message: "No file selected" });
-      }
 
-      for (const file of req.files) {
-        await Note.create({
-          fileName: file.filename,
-          subject: req.query.subject,
-          uploadedBy: "admin"
-        });
-      }
-
-      res.json({
-        message: "File uploaded successfully"
-      });
-    } catch (err) {
-      console.log(err);
-
-      res.status(500).json({
-        message: err.message
+    for (const file of req.files) {
+      await Note.create({
+        fileName: file.filename,
+        subject: req.query.subject,
+        uploadedBy: "admin"
       });
     }
+
+    res.json({ message: "File uploaded successfully" });
+  } catch (error) {
+    console.error("Upload error:", error);
+    res.status(500).json({ message: error.message });
   }
-);
+});
 
 app.get("/files", (req, res) => {
-  const subject = req.query.subject;
+  const { subject } = req.query;
 
-  if (!subject) return res.json([]);
+  if (!subject) {
+    return res.json([]);
+  }
 
-  const fs = require("fs");
-  const dir = "uploads/" + subject;
+  const subjectDirectory = getSubjectDirectory(subject);
+  if (!fs.existsSync(subjectDirectory)) {
+    return res.json([]);
+  }
 
-  if (!fs.existsSync(dir)) return res.json([]);
+  fs.readdir(subjectDirectory, (error, files) => {
+    if (error) {
+      return res.json([]);
+    }
 
-  fs.readdir(dir, (err, files) => {
-    if (err) return res.json([]);
     res.json(files);
   });
 });
 
-const fs = require("fs");
-
-app.delete("/delete", async (req, res) => {
+app.delete("/delete", requireAdmin, async (req, res) => {
   const { filename, subject } = req.query;
-
-  if (!req.session.isAdmin) {
-    return res.status(403).json({ message: "Unauthorized" });
-  }
 
   if (!filename || !subject) {
     return res.status(400).json({ message: "Missing data" });
   }
 
-  const filePath = `uploads/${subject}/${filename}`;
+  const filePath = path.join(getSubjectDirectory(subject), filename);
 
   try {
     const deleteResult = await Note.deleteMany({ fileName: filename, subject });
@@ -177,47 +177,37 @@ app.delete("/delete", async (req, res) => {
       message: "File and note record deleted successfully",
       deletedRecords: deleteResult.deletedCount
     });
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    console.error("Delete error:", error);
     res.status(500).json({ message: "File not found or error" });
   }
 });
 
-app.listen(port, () => {
-  console.log("Example app listening at http://localhost:3000")
-})
-
+// Contact route
 app.post("/contact", async (req, res) => {
-   console.log("Contact API called");
+  const { name, email, subject, message } = req.body;
 
-  try {
-
-    const { name, email, subject, message } = req.body;
-    if (!name || !email || !subject || !message) {
-      return res.status(400).json({
-        success: false,
-        message: "All fields are mandatory."
-      });
-    }
-    await Contact.create({
-      name,
-      email,
-      subject,
-      message
-    });
-
-    res.json({
-      success: true,
-      message: "Message saved successfully"
-    });
-
-  } catch (err) {
-
-    console.log(err);
-
-    res.status(500).json({
+  if (!name || !email || !subject || !message) {
+    return res.status(400).json({
       success: false,
-      message: "Server error"
+      message: "All fields are mandatory."
     });
   }
+
+  try {
+    await Contact.create({ name, email, subject, message });
+    res.json({ success: true, message: "Message saved successfully" });
+  } catch (error) {
+    console.error("Contact error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Application startup
+mongoose.connect(MONGODB_URI)
+  .then(() => console.log("MongoDB Connected"))
+  .catch(error => console.error("MongoDB connection error:", error));
+
+app.listen(PORT, () => {
+  console.log(`Example app listening at http://localhost:${PORT}`);
 });
