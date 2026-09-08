@@ -109,6 +109,76 @@ html[data-theme="dark"] .aboutSection-header {
     color: #93c5fd;
 }
 
+html[data-theme="dark"] .features {
+    background: #111827;
+}
+
+html[data-theme="dark"] .features-header {
+    color: #93c5fd;
+    text-shadow: 0 2px 14px rgba(96, 165, 250, 0.2);
+}
+
+html[data-theme="dark"] .card {
+    background: linear-gradient(145deg, #1f2937, #243b53);
+    border: 1px solid rgba(147, 197, 253, 0.22);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+}
+
+html[data-theme="dark"] .card h3 {
+    color: #7dd3fc;
+}
+
+html[data-theme="dark"] .card p {
+    color: #dbeafe;
+}
+
+html[data-theme="dark"] .card:hover {
+    border-color: rgba(147, 197, 253, 0.5);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
+}
+
+html[data-theme="dark"] .questions-section {
+    background: #0f2a52;
+}
+
+html[data-theme="dark"] .contact-section,
+html[data-theme="dark"] .contact-entry {
+    background: #111827;
+}
+
+html[data-theme="dark"] .contact-content {
+    color: #cbd5e1;
+}
+
+html[data-theme="dark"] .problem {
+    color: #f8fafc;
+    font-size: clamp(1.6rem, 4vw, 2.5rem);
+    line-height: 1.25;
+    text-shadow: 0 2px 14px rgba(96, 165, 250, 0.22);
+}
+
+html[data-theme="dark"] .contact-form {
+    background: #1f2937;
+    border: 1px solid rgba(147, 197, 253, 0.2);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+}
+
+html[data-theme="dark"] .contact-form input,
+html[data-theme="dark"] .contact-form textarea {
+    background: #111827;
+    color: #f8fafc;
+    border-color: #475569;
+}
+
+html[data-theme="dark"] .contact-form input::placeholder,
+html[data-theme="dark"] .contact-form textarea::placeholder {
+    color: #94a3b8;
+}
+
+html[data-theme="dark"] .contact-info {
+    background: #0f2a52;
+}
+
 @media (min-width: 901px) {
     nav {
         padding-left: 155px;

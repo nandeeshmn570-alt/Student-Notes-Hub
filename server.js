@@ -12,7 +12,7 @@ const { UPLOADS_DIR } = require("./middleware/upload");
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
-const PUBLIC_DIR = path.join(__dirname, "public");
+const CLIENT_DIST = path.join(__dirname, "client", "dist");
 
 // Middleware
 app.use(express.json());
@@ -22,17 +22,22 @@ app.use(session({
   saveUninitialized: true
 }));
 app.use("/uploads", express.static(UPLOADS_DIR));
-app.use(express.static(PUBLIC_DIR));
-
-// Page routes
-app.get("/", (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, "home.html"));
-});
+app.use(express.static(CLIENT_DIST));
 
 // API routes
 app.use(authRoutes);
 app.use(fileRoutes);
 app.use(contactRoutes);
+
+// React client-side routes
+app.use((req, res, next) => {
+  if (req.method === "GET" && req.accepts("html")) {
+    return res.sendFile(path.join(CLIENT_DIST, "index.html"));
+  }
+
+  next();
+});
+
 app.use(errorHandler);
 
 // Application startup

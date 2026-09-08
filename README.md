@@ -23,7 +23,22 @@ A subject-wise notes portal built with Node.js, Express, MongoDB, and static HTM
    npm start
    ```
 
-4. Open `http://localhost:3000/home.html`.
+4. Build the React frontend before starting production mode:
+
+   ```bash
+   npm run build
+   npm start
+   ```
+
+5. Open `http://localhost:3000`.
+
+For frontend development with Vite and the Express API:
+
+```bash
+npm run dev
+```
+
+The React frontend is in `client/`. It provides route-based Home, About, Notes, Contact, Admin, and Subject views with shared theme, navigation, loading, error, upload, and delete state.
 
 ## Features
 

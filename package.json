@@ -5,7 +5,10 @@
     "express": "^5.2.1",
     "express-session": "^1.19.0",
     "mongoose": "^9.6.2",
-    "multer": "^2.1.1"
+    "multer": "^2.1.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.3"
   },
   "name": "students-notes-hub-claude2",
   "version": "1.0.0",
@@ -13,10 +16,19 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "dev": "concurrently \"node server.js\" \"npm run client:dev\"",
+    "client:dev": "vite --config client/vite.config.mjs",
+    "client:build": "vite build --config client/vite.config.mjs",
+    "build": "npm run client:build",
     "test": "node --check server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs"
+  "type": "commonjs",
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.1.1",
+    "concurrently": "^10.0.5",
+    "vite": "^8.2.2"
+  }
 }
