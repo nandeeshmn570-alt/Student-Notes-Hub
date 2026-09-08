@@ -1,0 +1,122 @@
+html {
+    --page-background: #f3f5f9;
+    --surface: #ffffff;
+    --surface-muted: #e4e9f0;
+    --text: #111827;
+    --muted-text: #475569;
+    --accent: #0933eb;
+    --border: rgba(15, 23, 42, 0.15);
+    color-scheme: light;
+}
+
+html[data-theme="dark"] {
+    --page-background: #111827;
+    --surface: #1f2937;
+    --surface-muted: #172033;
+    --text: #f8fafc;
+    --muted-text: #cbd5e1;
+    --accent: #60a5fa;
+    --border: rgba(148, 163, 184, 0.28);
+    color-scheme: dark;
+}
+
+body {
+    background: var(--page-background);
+    color: var(--text);
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.theme-toggle {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    right: auto;
+    bottom: auto;
+    z-index: 1100;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 10px 14px;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.9rem;
+}
+
+.theme-toggle:hover {
+    border-color: var(--accent);
+}
+
+html[data-theme="dark"] nav,
+html[data-theme="dark"] footer {
+    background-color: #0f2a52;
+}
+
+html[data-theme="dark"] .portal-header,
+html[data-theme="dark"] .note-section,
+html[data-theme="dark"] .about-section {
+    background-color: #111827;
+}
+
+html[data-theme="dark"] .header-note,
+html[data-theme="dark"] .content-for-header,
+html[data-theme="dark"] .notes-title,
+html[data-theme="dark"] .note-title {
+    color: var(--text);
+}
+
+html[data-theme="dark"] .notes-card,
+html[data-theme="dark"] .notes-gallery {
+    background: var(--surface);
+    border-color: var(--border);
+}
+
+html[data-theme="dark"] .file-container input {
+    background: #111827;
+    color: var(--text);
+    border-color: var(--border);
+}
+
+html[data-theme="dark"] .login-card {
+    background: rgba(31, 41, 55, 0.88);
+}
+
+html[data-theme="dark"] .box,
+html[data-theme="dark"] .note-box {
+    background: linear-gradient(135deg, #1e40af, #164e63);
+    border-color: rgba(147, 197, 253, 0.35);
+}
+
+html[data-theme="dark"] .search-btn,
+html[data-theme="dark"] .add-btn,
+html[data-theme="dark"] button[type="submit"] {
+    background: #2563eb;
+    border-color: #93c5fd;
+}
+
+html[data-theme="dark"] .search-btn:hover,
+html[data-theme="dark"] .add-btn:hover,
+html[data-theme="dark"] button[type="submit"]:hover {
+    background: #3b82f6;
+}
+
+html[data-theme="dark"] .about-content {
+    color: #dbeafe;
+}
+
+html[data-theme="dark"] .aboutSection-header {
+    color: #93c5fd;
+}
+
+@media (min-width: 901px) {
+    nav {
+        padding-left: 155px;
+    }
+}
+
+@media (max-width: 900px) {
+    nav {
+        padding-top: 62px;
+    }
+}

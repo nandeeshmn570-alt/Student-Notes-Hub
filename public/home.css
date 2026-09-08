@@ -11,6 +11,9 @@ body {
     font-family: Arial, sans-serif;
     background: #f3f5f9;
     color: #111827;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 nav {
@@ -158,9 +161,13 @@ nav a:hover {
 
 footer {
     display: flex;
+    width: 100%;
+    min-height: 72px;
     padding: 22px 24px;
     background-color: rgb(9, 51, 235);
     justify-content: center;
+    align-items: center;
+    margin-top: auto;
     color: white;
     font-size: clamp(0.9rem, 2vw, 1.2rem);
     text-align: center;
@@ -173,6 +180,8 @@ a {
 
 .portal-header {
     display: flex;
+    flex: 1;
+    width: 100%;
     padding: clamp(60px, 20vh, 180px) 20px;
     align-items: center;
     justify-content: center;
@@ -258,6 +267,8 @@ button a {
 
 .note-section {
     display: flex;
+    flex: 1;
+    width: 100%;
     padding: clamp(40px, 8vw, 90px) 20px;
     flex-direction: column;
     align-items: center;
@@ -343,6 +354,8 @@ span a {
 .about-section {
     margin-bottom: 0;
     display: flex;
+    flex: 1;
+    width: 100%;
     padding: clamp(30px, 8vw, 80px) clamp(16px, 5vw, 120px);
     align-items: center;
     justify-content: center;
