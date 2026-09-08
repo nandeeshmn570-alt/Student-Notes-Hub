@@ -72,7 +72,14 @@ export function SubjectPage({ isAdmin }) {
       {isAdmin && (
         <form className="upload-card" onSubmit={upload}>
           <label htmlFor="note-files">Add study files</label>
+          <p className="upload-hint">Select one or multiple files to upload together.</p>
           <input ref={inputRef} id="note-files" type="file" multiple onChange={(event) => setSelectedFiles([...event.target.files])} />
+          {selectedFiles.length > 0 && (
+            <div className="selected-files" aria-live="polite">
+              <strong>{selectedFiles.length} file{selectedFiles.length === 1 ? "" : "s"} selected</strong>
+              {selectedFiles.map((file) => <span key={`${file.name}-${file.lastModified}`}>{file.name}</span>)}
+            </div>
+          )}
           <button className="primary-button" type="submit" disabled={state.submitting}>{state.submitting ? "Uploading..." : "Upload files"}</button>
         </form>
       )}
@@ -82,10 +89,17 @@ export function SubjectPage({ isAdmin }) {
         {!state.loading && files.length === 0 && <p className="empty-state">No notes have been uploaded yet.</p>}
         <div className="file-grid">
           {files.map((fileName) => (
-            <div className="file-row-react" key={fileName}>
-              <a className="file-link" href={`/uploads/${subjectId}/${encodeURIComponent(fileName)}`} target="_blank" rel="noreferrer">📄 {displayName(fileName)}</a>
-              {isAdmin && <button className="delete-button" type="button" onClick={() => remove(fileName)}>Delete</button>}
-            </div>
+            <article className="note-file-card" key={fileName}>
+              <div className="note-file-icon" aria-hidden="true">📄</div>
+              <div className="note-file-details">
+                <span className="note-file-label">STUDY NOTE</span>
+                <a className="file-link" href={`/uploads/${subjectId}/${encodeURIComponent(fileName)}`} target="_blank" rel="noreferrer">{displayName(fileName)}</a>
+              </div>
+              <div className="note-file-actions">
+                <a className="download-button" href={`/uploads/${subjectId}/${encodeURIComponent(fileName)}`} target="_blank" rel="noreferrer">Open</a>
+                {isAdmin && <button className="delete-button" type="button" onClick={() => remove(fileName)}>Delete</button>}
+              </div>
+            </article>
           ))}
         </div>
       </div>
