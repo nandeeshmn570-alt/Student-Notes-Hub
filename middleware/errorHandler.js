@@ -1,3 +1,4 @@
+const multer = require("multer");
 const { ApiError } = require("../utils/apiError");
 const { ApiResponse } = require("../utils/apiResponse");
 
@@ -6,9 +7,15 @@ function errorHandler(error, req, res, next) {
     return next(error);
   }
 
-  const apiError = error instanceof ApiError
-    ? error
-    : new ApiError(500, "Internal server error");
+  let apiError;
+
+  if (error instanceof ApiError) {
+    apiError = error;
+  } else if (error instanceof multer.MulterError && error.code === "LIMIT_FILE_SIZE") {
+    apiError = new ApiError(400, "Each file must be 10 MB or smaller");
+  } else {
+    apiError = new ApiError(500, "Internal server error");
+  }
 
   const response = new ApiResponse(
     apiError.statusCode,

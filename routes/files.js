@@ -1,10 +1,9 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
 
 const { Note } = require("../models");
+const { deleteFromCloudinary, uploadToCloudinary } = require("../config/cloudinary");
 const { requireAdmin } = require("../middleware/authorization");
-const { getSubjectDirectory, upload } = require("../middleware/upload");
+const { upload, validateSubject } = require("../middleware/upload");
 const { ApiError } = require("../utils/apiError");
 const { ApiResponse } = require("../utils/apiResponse");
 const { asyncHandler } = require("../utils/asyncHandler");
@@ -16,12 +15,40 @@ router.post("/upload", requireAdmin, upload.array("file"), asyncHandler(async (r
     throw new ApiError(400, "No file selected");
   }
 
-  for (const file of req.files) {
-    await Note.create({
-      fileName: file.filename,
-      subject: req.query.subject,
-      uploadedBy: "admin"
-    });
+  const subject = req.query.subject;
+  try {
+    validateSubject(subject);
+  } catch (error) {
+    throw new ApiError(400, "Invalid subject");
+  }
+
+  const uploadedFiles = [];
+  const savedNoteIds = [];
+
+  try {
+    for (const file of req.files) {
+      const cloudinaryFile = await uploadToCloudinary(file, subject);
+      uploadedFiles.push(cloudinaryFile);
+
+      await Note.create({
+        fileName: cloudinaryFile.public_id,
+        originalName: file.originalname,
+        url: cloudinaryFile.secure_url,
+        publicId: cloudinaryFile.public_id,
+        resourceType: cloudinaryFile.resource_type,
+        subject,
+        uploadedBy: "admin"
+      });
+      savedNoteIds.push(cloudinaryFile.public_id);
+    }
+  } catch (error) {
+    await Note.deleteMany({ publicId: { $in: savedNoteIds } });
+
+    for (const file of uploadedFiles) {
+      await deleteFromCloudinary(file.public_id, file.resource_type).catch(() => {});
+    }
+
+    throw error;
   }
 
   res.status(201).json(new ApiResponse(201, null, "File uploaded successfully"));
@@ -34,28 +61,23 @@ router.get("/files", asyncHandler(async (req, res) => {
     return res.json([]);
   }
 
-  let subjectDirectory;
-
   try {
-    subjectDirectory = getSubjectDirectory(subject);
+    validateSubject(subject);
   } catch (error) {
     return res.json([]);
   }
 
-  if (!fs.existsSync(subjectDirectory)) {
-    return res.json([]);
-  }
+  const files = await Note.find({ subject, url: { $exists: true, $ne: "" } })
+    .sort({ uploadDate: -1 })
+    .select("originalName url publicId resourceType")
+    .lean();
 
-  try {
-    const files = await fs.promises.readdir(subjectDirectory);
-    res.json(files);
-  } catch (error) {
-    if (error.code === "ENOENT") {
-      return res.json([]);
-    }
-
-    throw error;
-  }
+  res.json(files.map((file) => ({
+    id: file.publicId,
+    fileName: file.originalName,
+    url: file.url,
+    resourceType: file.resourceType
+  })));
 }));
 
 router.delete("/delete", requireAdmin, asyncHandler(async (req, res) => {
@@ -65,31 +87,23 @@ router.delete("/delete", requireAdmin, asyncHandler(async (req, res) => {
     throw new ApiError(400, "Missing data");
   }
 
-  if (path.basename(filename) !== filename) {
-    throw new ApiError(400, "Invalid filename");
-  }
-
-  let filePath;
-
   try {
-    filePath = path.join(getSubjectDirectory(subject), filename);
+    validateSubject(subject);
   } catch (error) {
     throw new ApiError(400, "Invalid subject");
   }
 
-  const deleteResult = await Note.deleteMany({ fileName: filename, subject });
-
-  try {
-    await fs.promises.unlink(filePath);
-  } catch (fileError) {
-    if (fileError.code !== "ENOENT") {
-      throw fileError;
-    }
+  const note = await Note.findOne({ publicId: filename, subject });
+  if (!note) {
+    throw new ApiError(404, "File not found");
   }
+
+  await deleteFromCloudinary(note.publicId, note.resourceType);
+  await Note.deleteOne({ _id: note._id });
 
   res.status(200).json(new ApiResponse(
     200,
-    { deletedRecords: deleteResult.deletedCount },
+    { deletedRecords: 1 },
     "File and note record deleted successfully"
   ));
 }));

@@ -12,6 +12,8 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/login": "http://localhost:3000",
+      "/register": "http://localhost:3000",
+      "/refresh": "http://localhost:3000",
       "/logout": "http://localhost:3000",
       "/check-admin": "http://localhost:3000",
       "/files": "http://localhost:3000",

@@ -2,17 +2,22 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { useTheme } from "../context/ThemeContext";
 
-export function Layout({ children, isAdmin, setIsAdmin }) {
+export function Layout({ children, user, setUser }) {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+
+  const openLogin = (path) => {
+    navigate(path);
+  };
 
   const handleLogout = async () => {
     try {
       await api.logout();
-      setIsAdmin(false);
-      navigate("/");
     } catch (error) {
-      window.alert(error.message);
+      console.error("Logout request failed:", error);
+    } finally {
+      setUser(null);
+      navigate("/");
     }
   };
 
@@ -29,8 +34,13 @@ export function Layout({ children, isAdmin, setIsAdmin }) {
             <NavLink to="/notes">Notes</NavLink>
             <NavLink to="/contact">Contact</NavLink>
             <NavLink to="/about">About</NavLink>
-            {!isAdmin && <NavLink className="admin-login-link" to="/admin">Admin login</NavLink>}
-            {isAdmin && <button className="logout-btn" type="button" onClick={handleLogout}>Logout</button>}
+            {!user && (
+              <>
+                <button className="student-login-link nav-login-button" type="button" onClick={() => openLogin("/login")}>Student login</button>
+                <button className="admin-login-link nav-login-button" type="button" onClick={() => openLogin("/admin")}>Admin login</button>
+              </>
+            )}
+            {user && <><span className="signed-in-badge">{user.role === "admin" ? "ADMIN" : "STUDENT"}</span><button className="logout-btn" type="button" onClick={handleLogout}>Logout</button></>}
           </div>
         </div>
       </nav>

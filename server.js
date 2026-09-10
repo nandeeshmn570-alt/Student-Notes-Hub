@@ -2,13 +2,13 @@ require("dotenv").config();
 
 const express = require("express");
 const path = require("path");
-const session = require("express-session");
+const cookieParser = require("cookie-parser");
 const { connectDatabase } = require("./config/database");
+const { validateAuthenticationConfig } = require("./config/authentication");
 const { errorHandler } = require("./middleware/errorHandler");
 const authRoutes = require("./routes/auth");
 const contactRoutes = require("./routes/contact");
 const fileRoutes = require("./routes/files");
-const { UPLOADS_DIR } = require("./middleware/upload");
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -16,12 +16,7 @@ const CLIENT_DIST = path.join(__dirname, "client", "dist");
 
 // Middleware
 app.use(express.json());
-app.use(session({
-  secret: process.env.SESSION_SECRET || "campus-notes-default-secret",
-  resave: false,
-  saveUninitialized: true
-}));
-app.use("/uploads", express.static(UPLOADS_DIR));
+app.use(cookieParser());
 app.use(express.static(CLIENT_DIST));
 
 // API routes
@@ -43,12 +38,13 @@ app.use(errorHandler);
 // Application startup
 async function startServer() {
   try {
+    validateAuthenticationConfig();
     await connectDatabase();
     app.listen(PORT, () => {
       console.log(`Example app listening at http://localhost:${PORT}`);
     });
   } catch (error) {
-    console.error("MongoDB connection error:", error);
+    console.error("Server startup failed:", error.message);
     process.exitCode = 1;
   }
 }

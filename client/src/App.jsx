@@ -10,23 +10,24 @@ import { NotesPage } from "./pages/NotesPage";
 import { SubjectPage } from "./pages/SubjectPage";
 
 export default function App() {
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    api.checkAdmin()
-      .then((data) => setIsAdmin(data.isAdmin === true))
-      .catch(() => setIsAdmin(false));
+    api.restoreSession()
+      .then((response) => setUser(response.data.user))
+      .catch(() => setUser(null));
   }, []);
 
   return (
-    <Layout isAdmin={isAdmin} setIsAdmin={setIsAdmin}>
+    <Layout user={user} setUser={setUser}>
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/notes" element={<NotesPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
-        <Route path="/admin" element={<LoginPage onLogin={() => setIsAdmin(true)} />} />
-        <Route path="/subjects/:subjectId" element={<SubjectPage isAdmin={isAdmin} />} />
+        <Route path="/login" element={<LoginPage onLogin={setUser} initialMode="student" />} />
+        <Route path="/admin" element={<LoginPage onLogin={setUser} initialMode="admin" />} />
+        <Route path="/subjects/:subjectId" element={<SubjectPage isAdmin={user?.role === "admin"} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>
