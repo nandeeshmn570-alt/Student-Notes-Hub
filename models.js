@@ -10,6 +10,7 @@ const contactSchema = new mongoose.Schema({
 const notesSchema = new mongoose.Schema({
   fileName: { type: String, required: true },
   originalName: { type: String, required: true },
+  noteText: { type: String, default: "" },
   url: { type: String, required: true },
   publicId: { type: String, required: true },
   resourceType: { type: String, required: true },

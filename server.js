@@ -9,6 +9,7 @@ const { errorHandler } = require("./middleware/errorHandler");
 const authRoutes = require("./routes/auth");
 const contactRoutes = require("./routes/contact");
 const fileRoutes = require("./routes/files");
+const chatRoutes = require("./routes/chat");
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -23,6 +24,7 @@ app.use(express.static(CLIENT_DIST));
 app.use(authRoutes);
 app.use(fileRoutes);
 app.use(contactRoutes);
+app.use(chatRoutes);
 
 // React client-side routes
 app.use((req, res, next) => {
@@ -39,7 +41,11 @@ app.use(errorHandler);
 async function startServer() {
   try {
     validateAuthenticationConfig();
-    await connectDatabase();
+    try {
+      await connectDatabase();
+    } catch (error) {
+      console.warn(`Database unavailable. Notes and authentication features may be limited: ${error.message}`);
+    }
     app.listen(PORT, () => {
       console.log(`Example app listening at http://localhost:${PORT}`);
     });

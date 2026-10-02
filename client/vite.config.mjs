@@ -19,6 +19,8 @@ export default defineConfig({
       "/files": "http://localhost:3000",
       "/upload": "http://localhost:3000",
       "/delete": "http://localhost:3000",
+      "/chat": "http://localhost:3000",
+      "/image": "http://localhost:3000",
       "/contact": "http://localhost:3000",
       "/uploads": "http://localhost:3000"
     }

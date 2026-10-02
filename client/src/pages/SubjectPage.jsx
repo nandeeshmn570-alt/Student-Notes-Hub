@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../api";
 import { StatusMessage } from "../components/StatusMessage";
+import { SubjectChat } from "../components/SubjectChat";
 import { subjects } from "../data";
 
 export function SubjectPage({ isAdmin }) {
@@ -140,6 +141,7 @@ export function SubjectPage({ isAdmin }) {
           ))}
         </div>
       </div>
+      <SubjectChat subject={subject} />
     </section>
   );
 }

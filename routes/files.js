@@ -1,4 +1,6 @@
 const express = require("express");
+const pdfParse = require("pdf-parse");
+const mammoth = require("mammoth");
 
 const { Note } = require("../models");
 const { deleteFromCloudinary, uploadToCloudinary } = require("../config/cloudinary");
@@ -9,6 +11,33 @@ const { ApiResponse } = require("../utils/apiResponse");
 const { asyncHandler } = require("../utils/asyncHandler");
 
 const router = express.Router();
+
+async function extractNoteText(file) {
+  const name = String(file.originalname || "").toLowerCase();
+  const buffer = Buffer.isBuffer(file.buffer) ? file.buffer : Buffer.from("");
+
+  if (!buffer.length) return "";
+
+  try {
+    if (name.endsWith(".pdf")) {
+      const parsed = await pdfParse(buffer);
+      return String(parsed.text || "").replace(/\s+/g, " ").trim();
+    }
+
+    if (name.endsWith(".docx")) {
+      const result = await mammoth.extractRawText({ buffer });
+      return String(result.value || "").replace(/\s+/g, " ").trim();
+    }
+
+    if (name.endsWith(".txt") || name.endsWith(".md") || name.endsWith(".csv") || name.endsWith(".json")) {
+      return String(buffer.toString("utf8")).replace(/\s+/g, " ").trim();
+    }
+  } catch (error) {
+    console.warn("Note text extraction failed for", file.originalname, error.message);
+  }
+
+  return "";
+}
 
 router.post("/upload", requireAdmin, upload.array("file"), asyncHandler(async (req, res) => {
   if (!req.files || req.files.length === 0) {
@@ -30,9 +59,12 @@ router.post("/upload", requireAdmin, upload.array("file"), asyncHandler(async (r
       const cloudinaryFile = await uploadToCloudinary(file, subject);
       uploadedFiles.push(cloudinaryFile);
 
+      const extractedText = await extractNoteText(file);
+
       await Note.create({
         fileName: cloudinaryFile.public_id,
         originalName: file.originalname,
+        noteText: extractedText.slice(0, 200000),
         url: cloudinaryFile.secure_url,
         publicId: cloudinaryFile.public_id,
         resourceType: cloudinaryFile.resource_type,

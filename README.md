@@ -5,6 +5,7 @@ A subject-wise notes portal built with Node.js, Express, MongoDB, and static HTM
 ## Requirements
 
 - Node.js
+- Python 3.10+
 - MongoDB running locally, or a MongoDB connection string
 
 ## Setup
@@ -15,12 +16,23 @@ A subject-wise notes portal built with Node.js, Express, MongoDB, and static HTM
    npm install
    ```
 
+   Install the Python chatbot dependencies:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
 2. Create `.env` from `.env.example` and set the admin credentials, JWT secrets, MongoDB URI, and Cloudinary credentials:
 
    ```env
    CLOUDINARY_CLOUD_NAME=your-cloud-name
    CLOUDINARY_API_KEY=your-api-key
    CLOUDINARY_API_SECRET=your-api-secret
+   AI_PROVIDER=gemini
+   GEMINI_API_KEY=your-google-ai-studio-key
+   GEMINI_MODEL=gemini-2.0-flash
+   AI_SERVICE_URL=http://127.0.0.1:5001/chat
+   AI_SERVICE_PORT=5001
    ACCESS_TOKEN_SECRET=use-a-long-random-secret
    REFRESH_TOKEN_SECRET=use-another-long-random-secret
    ```
@@ -48,6 +60,8 @@ For frontend development with Vite and the Express API:
 npm run dev
 ```
 
+`npm run dev` starts the Node server, Vite client, and Python AI service together. To run them separately, use `npm start`, `npm run client:dev`, and `python ai_service.py`.
+
 The React frontend is in `client/`. It provides route-based Home, About, Notes, Contact, Admin, and Subject views with shared theme, navigation, loading, error, upload, and delete state.
 
 ## Features
@@ -60,3 +74,4 @@ The React frontend is in `client/`. It provides route-based Home, About, Notes, 
 - Short-lived access tokens and rotating refresh tokens
 - Admin role protection for uploads and deletion
 - Contact form storage
+- Python-powered subject-aware AI study assistant on every subject notes page. Gemini can be used with a Google AI Studio API key and `AI_PROVIDER=gemini`; free-tier limits depend on the Google account and region.

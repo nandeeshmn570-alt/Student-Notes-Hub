@@ -77,5 +77,15 @@ export const api = {
   deleteFile: (subject, fileId) => request(
     `/delete?subject=${encodeURIComponent(subject)}&filename=${encodeURIComponent(fileId)}`,
     { method: "DELETE" }
-  )
+  ),
+  chat: (subject, messages, memorySummary = "") => request("/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ subject, messages, memorySummary })
+  }),
+  generateImage: (subject, prompt) => request("/image", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ subject, prompt })
+  })
 };
