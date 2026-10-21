@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 .env
 *.txt
+!Project_plan.txt
 
 uploads/*
 !uploads/.gitkeep

@@ -4,9 +4,9 @@ const { Note } = require("../models");
 const { validateSubject } = require("../middleware/upload");
 const { ApiError } = require("../utils/apiError");
 const { asyncHandler } = require("../utils/asyncHandler");
+const { AIServiceError, generateChatReply, generateImage } = require("../utils/aiService");
 
 const router = express.Router();
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://127.0.0.1:5001/chat";
 
 function normalizeText(value = "") {
   return String(value).toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
@@ -99,31 +99,18 @@ router.post("/chat", asyncHandler(async (req, res) => {
   const retrievalContext = buildRetrievalContext(subject, noteEntries, latestUserMessage);
   const conversationMemory = memorySummary || buildMemorySummary(safeMessages);
 
-  let response;
+  let reply;
   try {
-    response = await fetch(AI_SERVICE_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        subject,
-        messages: safeMessages,
-        noteNames: noteEntries.map((entry) => entry.originalName),
-        retrievalContext,
-        memorySummary: conversationMemory
-      })
+    reply = await generateChatReply({
+      subject,
+      messages: safeMessages,
+      noteNames: noteEntries.map((entry) => entry.originalName),
+      retrievalContext,
+      memorySummary: conversationMemory
     });
   } catch (error) {
-    throw new ApiError(503, "The Python AI service is not running. Start it with: python ai_service.py");
-  }
-
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new ApiError(response.status === 503 ? 503 : 502, payload.message || "The AI service is unavailable right now");
-  }
-
-  const reply = payload.reply?.trim();
-  if (!reply) {
-    throw new ApiError(502, "The AI service returned an empty response");
+    if (error instanceof AIServiceError) throw new ApiError(error.status, error.message);
+    throw error;
   }
 
   res.json({ reply });
@@ -140,19 +127,14 @@ router.post("/image", asyncHandler(async (req, res) => {
     throw new ApiError(400, "An image prompt is required");
   }
 
-  let response;
+  let image;
   try {
-    response = await fetch(`${AI_SERVICE_URL.replace(/\/chat$/, "")}/image`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ subject, prompt })
-    });
+    image = await generateImage({ subject, prompt });
   } catch (error) {
-    throw new ApiError(503, "The Python AI service is not running. Start it with: python ai_service.py");
+    if (error instanceof AIServiceError) throw new ApiError(error.status, error.message);
+    throw error;
   }
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new ApiError(response.status, payload.message || "Image generation failed");
-  res.json(payload);
+  res.json({ image });
 }));
 
 module.exports = router;

@@ -13,30 +13,34 @@ const { asyncHandler } = require("../utils/asyncHandler");
 const router = express.Router();
 
 async function extractNoteText(file) {
-  const name = String(file.originalname || "").toLowerCase();
-  const buffer = Buffer.isBuffer(file.buffer) ? file.buffer : Buffer.from("");
+  const fileName = (file.originalname || "").toLowerCase();
+  const fileContents = Buffer.isBuffer(file.buffer) ? file.buffer : Buffer.from("");
+  let text = "";
 
-  if (!buffer.length) return "";
+  if (fileContents.length === 0) {
+    return "";
+  }
 
   try {
-    if (name.endsWith(".pdf")) {
-      const parsed = await pdfParse(buffer);
-      return String(parsed.text || "").replace(/\s+/g, " ").trim();
-    }
-
-    if (name.endsWith(".docx")) {
-      const result = await mammoth.extractRawText({ buffer });
-      return String(result.value || "").replace(/\s+/g, " ").trim();
-    }
-
-    if (name.endsWith(".txt") || name.endsWith(".md") || name.endsWith(".csv") || name.endsWith(".json")) {
-      return String(buffer.toString("utf8")).replace(/\s+/g, " ").trim();
+    if (fileName.endsWith(".pdf")) {
+      const result = await pdfParse(fileContents);
+      text = result.text || "";
+    } else if (fileName.endsWith(".docx")) {
+      const result = await mammoth.extractRawText({ buffer: fileContents });
+      text = result.value || "";
+    } else if (
+      fileName.endsWith(".txt")
+      || fileName.endsWith(".md")
+      || fileName.endsWith(".csv")
+      || fileName.endsWith(".json")
+    ) {
+      text = fileContents.toString("utf8");
     }
   } catch (error) {
     console.warn("Note text extraction failed for", file.originalname, error.message);
   }
 
-  return "";
+  return text.replace(/\s+/g, " ").trim();
 }
 
 router.post("/upload", requireAdmin, upload.array("file"), asyncHandler(async (req, res) => {
@@ -47,37 +51,41 @@ router.post("/upload", requireAdmin, upload.array("file"), asyncHandler(async (r
   const subject = req.query.subject;
   try {
     validateSubject(subject);
-  } catch (error) {
+  } catch {
     throw new ApiError(400, "Invalid subject");
   }
 
   const uploadedFiles = [];
-  const savedNoteIds = [];
+  const savedFileIds = [];
 
   try {
     for (const file of req.files) {
-      const cloudinaryFile = await uploadToCloudinary(file, subject);
-      uploadedFiles.push(cloudinaryFile);
+      const uploadedFile = await uploadToCloudinary(file, subject);
+      uploadedFiles.push(uploadedFile);
 
-      const extractedText = await extractNoteText(file);
+      const noteText = await extractNoteText(file);
 
       await Note.create({
-        fileName: cloudinaryFile.public_id,
+        fileName: uploadedFile.public_id,
         originalName: file.originalname,
-        noteText: extractedText.slice(0, 200000),
-        url: cloudinaryFile.secure_url,
-        publicId: cloudinaryFile.public_id,
-        resourceType: cloudinaryFile.resource_type,
+        noteText: noteText.slice(0, 200000),
+        url: uploadedFile.secure_url,
+        publicId: uploadedFile.public_id,
+        resourceType: uploadedFile.resource_type,
         subject,
         uploadedBy: "admin"
       });
-      savedNoteIds.push(cloudinaryFile.public_id);
+      savedFileIds.push(uploadedFile.public_id);
     }
   } catch (error) {
-    await Note.deleteMany({ publicId: { $in: savedNoteIds } });
+    await Note.deleteMany({ publicId: { $in: savedFileIds } });
 
-    for (const file of uploadedFiles) {
-      await deleteFromCloudinary(file.public_id, file.resource_type).catch(() => {});
+    for (const uploadedFile of uploadedFiles) {
+      try {
+        await deleteFromCloudinary(uploadedFile.public_id, uploadedFile.resource_type);
+      } catch (cleanupError) {
+        console.warn("Could not remove uploaded file during rollback:", cleanupError.message);
+      }
     }
 
     throw error;
@@ -87,7 +95,7 @@ router.post("/upload", requireAdmin, upload.array("file"), asyncHandler(async (r
 }));
 
 router.get("/files", asyncHandler(async (req, res) => {
-  const { subject } = req.query;
+  const subject = req.query.subject;
 
   if (!subject) {
     return res.json([]);
@@ -95,7 +103,7 @@ router.get("/files", asyncHandler(async (req, res) => {
 
   try {
     validateSubject(subject);
-  } catch (error) {
+  } catch {
     return res.json([]);
   }
 
@@ -113,19 +121,20 @@ router.get("/files", asyncHandler(async (req, res) => {
 }));
 
 router.delete("/delete", requireAdmin, asyncHandler(async (req, res) => {
-  const { filename, subject } = req.query;
+  const fileId = req.query.filename;
+  const subject = req.query.subject;
 
-  if (!filename || !subject) {
+  if (!fileId || !subject) {
     throw new ApiError(400, "Missing data");
   }
 
   try {
     validateSubject(subject);
-  } catch (error) {
+  } catch {
     throw new ApiError(400, "Invalid subject");
   }
 
-  const note = await Note.findOne({ publicId: filename, subject });
+  const note = await Note.findOne({ publicId: fileId, subject });
   if (!note) {
     throw new ApiError(404, "File not found");
   }

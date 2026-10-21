@@ -21,8 +21,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "concurrently \"node server.js\" \"npm run client:dev\" \"python ai_service.py\"",
-    "ai:dev": "python ai_service.py",
+    "dev": "concurrently \"node server.js\" \"npm run client:dev\"",
+    "example:reverse-words": "node scripts/reverseWords.js",
     "client:dev": "vite --config client/vite.config.mjs",
     "client:build": "vite build --config client/vite.config.mjs",
     "build": "npm run client:build",

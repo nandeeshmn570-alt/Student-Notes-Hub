@@ -1,0 +1,157 @@
+STUDENT NOTES HUB
+END-TO-END PROJECT PLAN
+
+Project purpose
+---------------
+Build a secure, responsive web application where students can browse and
+download subject notes, contact the team, and use an AI study assistant.
+Administrators manage note uploads and deletion.
+
+Technology stack
+----------------
+- Frontend: React, React Router, Vite, HTML, CSS, JavaScript
+- Backend: Node.js and Express
+- Database: MongoDB with Mongoose
+- File storage: Cloudinary
+- Authentication: bcryptjs, JWT access tokens, rotating refresh tokens
+- AI: Node.js service code calling Gemini or OpenAI APIs
+- Tests/build: Node.js scripts and Vite
+
+Project status key
+------------------
+[DONE] Implemented in the current project
+[NEXT] Recommended next work
+[TODO] Planned work not yet completed
+
+PHASE 1 - DEFINE THE PROJECT
+----------------------------
+[DONE] 1. Confirm the project name: Student Notes Hub.
+[DONE] 2. Define the main users: students and administrators.
+[DONE] 3. Define the core needs: find notes by subject, manage notes safely,
+       and provide study support.
+[DONE] 4. Choose the application stack listed above.
+
+PHASE 2 - PREPARE THE DEVELOPMENT ENVIRONMENT
+---------------------------------------------
+[DONE] 1. Create the Node.js project and install dependencies with npm.
+[DONE] 2. Configure environment variables using .env and .env.example.
+[DONE] 3. Add local development commands for the Express server and Vite client.
+[NEXT] 4. Verify a new developer can follow README.md from a clean checkout.
+[TODO] 5. Document required environment variables and safe setup of API keys.
+
+PHASE 3 - BUILD THE APPLICATION FOUNDATION
+-------------------------------------------
+[DONE] 1. Set up the Express application and JSON/cookie middleware.
+[DONE] 2. Connect MongoDB through the shared database configuration.
+[DONE] 3. Add common API responses, errors, and async route handling.
+[DONE] 4. Set up the React application, routing, shared layout, and styles.
+[TODO] 5. Add consistent server-side validation for every API input.
+[TODO] 6. Add startup checks for required production environment variables.
+
+PHASE 4 - IMPLEMENT ACCOUNTS AND ACCESS CONTROL
+------------------------------------------------
+[DONE] 1. Add student registration with username and password validation.
+[DONE] 2. Hash student passwords with bcryptjs.
+[DONE] 3. Add administrator and student sign-in.
+[DONE] 4. Issue short-lived access tokens and HTTP-only refresh cookies.
+[DONE] 5. Rotate and revoke refresh tokens; add logout and session restoration.
+[DONE] 6. Restrict note upload and deletion to administrators.
+[DONE] 7. Add the login pages and display controls appropriate to the role.
+[TODO] 8. Add rate limiting and automated tests for registration, login,
+       session refresh, logout, and authorization failures.
+
+PHASE 5 - BUILD SUBJECT NOTES
+-----------------------------
+[DONE] 1. Define the supported subjects and their display names.
+[DONE] 2. Add MongoDB note metadata, including subject, URL, and upload date.
+[DONE] 3. Upload administrator-selected files to Cloudinary.
+[DONE] 4. Enforce the configured per-file upload size limit.
+[DONE] 5. Extract searchable text from supported PDF, DOCX, and text formats.
+[DONE] 6. List notes by subject and let users open the stored file.
+[DONE] 7. Let administrators delete a note and its stored file.
+[TODO] 8. Review allowed file types, file validation, duplicate handling, and
+       rollback behavior when storage or database operations fail.
+[TODO] 9. Add automated tests for upload, listing, extraction, and deletion.
+
+PHASE 6 - COMPLETE THE STUDENT-FACING WEBSITE
+---------------------------------------------
+[DONE] 1. Add Home, Notes, About, Contact, Login, Admin, and Subject pages.
+[DONE] 2. Add shared navigation, theme, status messages, and responsive styles.
+[DONE] 3. Add subject cards and file selection/upload feedback for admins.
+[DONE] 4. Add a contact form that saves messages to MongoDB.
+[TODO] 5. Test every page at mobile, tablet, and desktop sizes.
+[TODO] 6. Check keyboard navigation, labels, contrast, loading, empty, and error
+       states.
+[TODO] 7. Decide whether administrators need a page to review contact messages.
+
+PHASE 7 - ADD AND VERIFY THE AI STUDY ASSISTANT
+------------------------------------------------
+[DONE] 1. Connect chat and image endpoints to the Node.js Express application.
+[DONE] 2. Support configured Gemini/OpenAI chat providers and Gemini visuals.
+[DONE] 3. Ground chat prompts with relevant extracted note text and recent chat.
+[DONE] 4. Validate chat subject, message count, role, and content.
+[DONE] 5. Keep provider keys on the server; never expose them in the frontend.
+[TODO] 6. Test successful responses, missing/invalid keys, rate limits, provider
+       errors, timeouts, and image-generation fallbacks.
+[TODO] 7. Confirm the chosen provider models and image-generation API are
+       available for the deployed account and region.
+[TODO] 8. Review note-context limits and ensure answers do not claim evidence
+       that is absent from the uploaded notes.
+
+PHASE 8 - FINISH SEARCH AND NOTE DISCOVERY
+------------------------------------------
+[DONE] 1. Extract text from supported notes and use it to select relevant chat
+       context.
+[TODO] 2. Add note filename search, subject filtering, and sort order.
+[TODO] 3. Add pagination if note collections grow beyond a practical page size.
+[OPTIONAL] 4. Consider semantic/vector search only after ordinary search has
+           been tested and students need richer retrieval.
+
+PHASE 9 - SECURITY, RELIABILITY, AND DATA HANDLING
+--------------------------------------------------
+[TODO] 1. Validate and limit all request bodies, query parameters, and uploads.
+[TODO] 2. Configure production CORS, secure cookies, and security headers.
+[TODO] 3. Add login/contact/API rate limits and clear error responses.
+[TODO] 4. Check that secrets, uploaded files, and personal data are not committed.
+[TODO] 5. Add database backup/restore guidance and a data-retention policy.
+[TODO] 6. Review logs to ensure passwords, tokens, and API keys are never logged.
+
+PHASE 10 - AUTOMATED QUALITY CHECKS
+-----------------------------------
+[DONE] 1. Add a basic npm test command.
+[TODO] 2. Add API tests for authentication, notes, contact, chat, and access
+       control using a test database and mocked external providers.
+[TODO] 3. Add frontend tests for core pages, forms, loading, and error states.
+[TODO] 4. Add linting and formatting checks and run them before each release.
+[TODO] 5. Make the CI workflow install dependencies, run tests, and build the
+       frontend on every pull request.
+
+PHASE 11 - DEPLOY THE APPLICATION
+---------------------------------
+[TODO] 1. Choose a hosting provider that supports the Node.js app and MongoDB.
+[TODO] 2. Create production MongoDB and Cloudinary configuration.
+[TODO] 3. Set production secrets through the hosting provider, not source files.
+[TODO] 4. Build the frontend and serve it through the Express application.
+[TODO] 5. Configure HTTPS, allowed origins, domain, and production cookie settings.
+[TODO] 6. Deploy to a staging environment and verify login, notes, contact, and
+       AI features before public release.
+[TODO] 7. Add health monitoring, error logging, and a rollback procedure.
+
+PHASE 12 - RELEASE AND MAINTAIN
+-------------------------------
+[TODO] 1. Run the full test suite and production build for each release.
+[TODO] 2. Confirm a clean install and deployment using the README instructions.
+[TODO] 3. Collect student/admin feedback and prioritize fixes.
+[TODO] 4. Keep dependencies and runtime versions updated.
+[TODO] 5. Track future features separately so they do not delay a stable release.
+
+RELEASE ACCEPTANCE CHECKLIST
+----------------------------
+[TODO] A student can register, sign in, browse subjects, open notes, use the
+      contact form, and sign out.
+[TODO] An administrator can sign in, upload valid notes, and delete notes.
+[TODO] Unauthorized users cannot upload or delete notes.
+[TODO] AI chat and image endpoints handle missing configuration and provider
+      failures without exposing secrets.
+[TODO] The application is responsive, accessible for core interactions, tested,
+      documented, and deployed with production configuration.
